@@ -1,0 +1,48 @@
+type: install
+id: mattermost
+name: Mattermost
+homepage: https://mattermost.com/
+baseUrl: https://raw.githubusercontent.com/reclaimhosting/mattermost-jps/master
+logo: images/mattermost-logo.png
+
+description: 
+  text: Mattermost is an open-source, self-hostable online chat service comparable to Slack and Microsoft Teams with file sharing, search, and integrations.
+  
+categories:
+- apps/popular
+- apps/collaboration
+
+nodes:
+  nodeType: dockerengine
+  nodeGroup: cp
+  cloudlets: 16
+  extip: false
+  displayName: Mattermost Server
+
+onInstall: setup
+
+actions:
+  setup:
+    cmd[cp]: |-
+      git clone https://github.com/mattermost/mattermost-docker.git;
+      cd mattermost-docker;
+      docker-compose build;
+      mkdir -pv ./volumes/app/mattermost/{data,logs,config,plugins,client-plugins};
+      sudo chown -R 2000:2000 ./volumes/app/mattermost/;
+      docker-compose up -d;
+
+      #Checking of container is up and running 
+      until [ "`/usr/bin/docker inspect -f {{.State.Running}} mattermost-docker_app_1`"=="true" ]; do
+        sleep 1
+        print '.'
+      done;
+
+      echo OK
+
+ssl: true
+skipNodeEmails: true
+    
+success: | 
+  **Mattermost URL**: [https://${env.domain}/](https://${env.domain}/)
+  
+  It may take a few minutes till your environment is ready. 
